@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Interaktif PPKn Kelas 3: Aku Anak Indonesia</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background: linear-gradient(135deg, #f0fdf4 0%, #eff6ff 50%, #fef3c7 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        .screen {
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+            transform: scale(0.97);
+        }
+        .screen.active {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+            animation: bounceIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes bounceIn {
+            0% { opacity: 0; transform: scale(0.95); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .kid-card {
+            background-color: white;
+            border-radius: 2rem;
+            box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -5px rgba(0, 0, 0, 0.05);
+            border: 4px solid #fff;
+        }
+        .btn-fun {
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 0px rgba(0,0,0,0.15);
+        }
+        .btn-fun:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 0px rgba(0,0,0,0.15);
+        }
+        .btn-fun:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0px rgba(0,0,0,0.15);
+        }
+        .opt-correct {
+            background-color: #34d399 !important;
+            color: white !important;
+            border-color: #059669 !important;
+            transform: scale(1.02);
+        }
+        .opt-wrong {
+            background-color: #f87171 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+            animation: shake 0.4s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+            75% { transform: translateX(-6px); }
+        }
+        .disabled-opts {
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body class="text-slate-700 p-4 md:p-6 flex items-center justify-center">
+
+    <div class="w-full max-w-3xl mx-auto">
+
+        <!-- SCREEN 1: LOGIN / IDENTITAS SISWA -->
+        <div id="screen-login" class="screen active">
+            <div class="kid-card p-6 md:p-10 text-center border-emerald-200">
+                <div class="inline-block bg-emerald-100 text-emerald-600 p-4 rounded-3xl text-4xl mb-4 shadow-inner">🇮🇩</div>
+                <h1 class="text-3xl md:text-4xl font-bold mb-2 text-emerald-700">Aku Anak Indonesia</h1>
+                <p class="text-slate-500 mb-8 text-lg">Pendidikan Pancasila Kelas 3 Kurikulum Merdeka</p>
+
+                <div class="space-y-5 text-left max-w-md mx-auto">
+                    <div>
+                        <label class="block font-semibold mb-2 text-slate-700">Nama Lengkap:</label>
+                        <input type="text" id="input-name" placeholder="Tulis namamu di sini..." 
+                            class="w-full px-4 py-3.5 rounded-2xl border-2 border-emerald-200 focus:border-emerald-500 focus:outline-none text-lg bg-emerald-50/30">
+                        <p id="error-name" class="text-red-500 text-sm mt-1 hidden font-medium">⚠️ Tolong masukkan nama lengkapmu ya!</p>
+                    </div>
+
+                    <div>
+                        <label class="block font-semibold mb-2 text-slate-700">Kelas:</label>
+                        <select id="input-class" class="w-full px-4 py-3.5 rounded-2xl border-2 border-emerald-200 focus:border-emerald-500 focus:outline-none text-lg bg-emerald-50/30">
+                            <option value="Kelas 3A">Kelas 3A</option>
+                            <option value="Kelas 3B">Kelas 3B</option>
+                            <option value="Kelas 3C">Kelas 3C</option>
+                            <option value="Kelas 3 Lainnya">Kelas 3 Lainnya</option>
+                        </select>
+                    </div>
+
+                    <button id="btn-start" class="btn-fun w-full bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold text-xl py-4 rounded-2xl mt-4">
+                        Mulai Kuis 🚀
+                    </button>
+                </div>
+
+                <!-- Teacher Login Toggle Link -->
+                <div class="mt-8 pt-6 border-t border-slate-100">
+                    <button onclick="openTeacherLoginModal()" class="text-sm font-semibold text-slate-400 hover:text-emerald-600 transition">
+                        🔐 Masuk Panel Guru (Rekap Nilai)
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 2: KUIS UTAMA -->
+        <div id="screen-quiz" class="screen">
+            <div class="kid-card p-6 md:p-10 border-blue-200">
+                <!-- Header Status -->
+                <div class="flex flex-wrap justify-between items-center mb-6 gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-blue-100 text-blue-700 font-bold px-4 py-1.5 rounded-full text-sm md:text-base" id="q-counter">Soal 1/20</span>
+                        <span class="bg-emerald-100 text-emerald-700 font-bold px-3 py-1.5 rounded-full text-sm md:text-base" id="student-tag">Nama Siswa</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span class="bg-amber-100 text-amber-700 font-bold px-4 py-1.5 rounded-full flex items-center gap-1.5 text-sm md:text-base">
+                            ⭐ Skor: <span id="live-score">0</span>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 rounded-full h-3.5 mb-8 overflow-hidden shadow-inner">
+                    <div id="progress-bar" class="bg-gradient-to-r from-blue-400 to-emerald-500 h-3.5 rounded-full transition-all duration-300" style="width: 5%"></div>
+                </div>
+
+                <!-- Question Box -->
+                <div class="mb-8 min-h-[90px] flex items-center">
+                    <h3 id="question-text" class="text-xl md:text-2xl font-bold text-slate-800 leading-snug">
+                        Memuat pertanyaan...
+                    </h3>
+                </div>
+
+                <!-- Options Box -->
+                <div id="options-container" class="space-y-3.5">
+                    <!-- Options injected dynamically -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SCREEN 3: HASIL KUIS SISWA -->
+        <div id="screen-result" class="screen">
+            <div class="kid-card p-6 md:p-10 text-center border-amber-200">
+                <div id="result-emoji" class="text-6xl mb-3">🏆</div>
+                <h2 id="result-title" class="text-3xl md:text-4xl font-bold mb-2 text-amber-600">Luar Biasa!</h2>
+                <p id="result-subtitle" class="text-slate-600 mb-6 text-lg">Kamu telah menyelesaikan seluruh soal latihan.</p>
+
+                <div class="bg-amber-50 rounded-3xl p-6 mb-8 border-2 border-amber-100 max-w-md mx-auto">
+                    <p class="text-slate-600 font-medium mb-1">Nilai Akhir Kamu:</p>
+                    <div id="final-score" class="text-6xl font-extrabold text-amber-600 tracking-tight mb-2">100</div>
+                    <p id="result-detail" class="text-slate-500 font-medium text-sm">Benar 20 dari 20 soal</p>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+                    <button onclick="restartQuiz()" class="btn-fun bg-gradient-to-r from-blue-500 to-indigo-600 text-white font-bold text-lg py-3.5 px-6 rounded-2xl flex-1">
+                        🔄 Coba Lagi
+                    </button>
+                    <button onclick="goToHome()" class="btn-fun bg-slate-200 text-slate-700 font-bold text-lg py-3.5 px-6 rounded-2xl flex-1">
+                        🏠 Menu Utama
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TEACHER PIN MODAL -->
+    <div id="modal-teacher-pin" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 md:p-8 max-w-sm w-full shadow-2xl border-4 border-slate-100 animate-in fade-in zoom-in duration-200">
+            <div class="text-center mb-4">
+                <div class="text-3xl mb-2">🔐</div>
+                <h3 class="text-xl font-bold text-slate-800">Panel Guru</h3>
+                <p class="text-slate-500 text-sm">Masukkan PIN sandi rahasia guru untuk melihat rekap nilai siswa.</p>
+            </div>
+            <input type="password" id="teacher-pin-input" placeholder="Masukkan PIN (contoh: guru123)" 
+                class="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-emerald-500 focus:outline-none mb-4 text-center text-lg">
+            <p id="pin-error" class="text-red-500 text-xs mb-3 hidden text-center font-medium">⚠️ PIN salah! Coba 'guru123'</p>
+            <div class="flex gap-2">
+                <button onclick="closeTeacherLoginModal()" class="btn-fun flex-1 bg-slate-100 text-slate-600 font-bold py-3 rounded-xl">Batal</button>
+                <button onclick="verifyTeacherPin()" class="btn-fun flex-1 bg-emerald-600 text-white font-bold py-3 rounded-xl">Masuk</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCREEN 4: TEACHER DASHBOARD (REKAP NILAI) -->
+    <div id="screen-teacher" class="screen w-full max-w-5xl mx-auto">
+        <div class="kid-card p-6 md:p-8 border-indigo-200">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b pb-4">
+                <div>
+                    <h2 class="text-2xl md:text-3xl font-bold text-indigo-700 flex items-center gap-2">
+                        📊 Rekap Nilai Siswa
+                    </h2>
+                    <p class="text-slate-500 text-sm">Daftar nilai kuis PPKn Kelas 3 Bab 1 "Aku Anak Indonesia"</p>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="exportScoresCSV()" class="btn-fun bg-emerald-600 text-white font-bold text-sm px-4 py-2.5 rounded-xl flex items-center gap-1.5">
+                        📥 Ekspor CSV
+                    </button>
+                    <button onclick="clearAllScores()" class="btn-fun bg-red-500 text-white font-bold text-sm px-4 py-2.5 rounded-xl flex items-center gap-1.5">
+                        🗑️ Hapus Data
+                    </button>
+                    <button onclick="goToHome()" class="btn-fun bg-slate-200 text-slate-700 font-bold text-sm px-4 py-2.5 rounded-xl">
+                        ⬅️ Keluar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Table container -->
+            <div class="overflow-x-auto rounded-2xl border border-slate-200">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-indigo-50 text-indigo-900 font-bold text-sm md:text-base">
+                            <th class="p-3.5 md:p-4">No</th>
+                            <th class="p-3.5 md:p-4">Nama Siswa</th>
+                            <th class="p-3.5 md:p-4">Kelas</th>
+                            <th class="p-3.5 md:p-4">Nilai Akhir</th>
+                            <th class="p-3.5 md:p-4">Benar/Total</th>
+                            <th class="p-3.5 md:p-4">Waktu Pengerjaan</th>
+                        </tr>
+                    </thead>
+                    <tbody id="score-table-body" class="divide-y divide-slate-100 text-slate-700 text-sm md:text-base">
+                        <!-- Rows injected via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="no-scores-msg" class="text-center py-12 text-slate-400 hidden">
+                Belum ada data nilai siswa yang tersimpan.
+            </div>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- DATA SOAL (20 SOAL PPKN KELAS 3 KURIKULUM MERDEKA - UPDATED) ---
+        const questionsData = [
+            {
+                q: "Setiap anak memiliki identitas diri yang berbeda-beda. Di bawah ini yang termasuk contoh identitas diri adalah ...",
+                opts: ["Jumlah uang saku", "Nama, agama, dan suku bangsa", "Warna sepatu dan tas", "Merek pensil dan buku"],
+                ans: 1
+            },
+            {
+                q: "Manusia tidak dapat hidup sendiri tanpa bantuan orang lain, sehingga manusia disebut sebagai ...",
+                opts: ["Makhluk individu", "Makhluk sosial", "Makhluk mandiri", "Makhluk asing"],
+                ans: 1
+            },
+            {
+                q: "Meskipun Ayah dan Ibu terkadang berasal dari suku atau daerah yang berbeda, sikap kita di dalam keluarga seharusnya adalah ...",
+                opts: ["Saling mengejek", "Saling memusuhi", "Saling menyayangi dan menghormati", "Acuh tak acuh"],
+                ans: 2
+            },
+            {
+                q: "Semboyan bangsa Indonesia adalah 'Bhinneka Tunggal Ika' yang artinya ...",
+                opts: ["Berbeda-beda tetapi tetap satu jua", "Bersama kita teguh bercerai kita runtuh", "Sama rasa sama rata", "Berbeda-beda untuk bersaing"],
+                ans: 0
+            },
+            {
+                q: "Di dalam kelas, teman-temanmu berasal dari suku dan budaya yang berbeda. Sikapmu terhadap perbedaan tersebut adalah ...",
+                opts: ["Menjauhinya", "Menghargai dan menghormatinya", "Mengejek bahasanya", "Berteman dengan yang satu suku saja"],
+                ans: 1
+            },
+            {
+                q: "Suku Jawa, Suku Sunda, dan Suku Madura adalah kelompok suku bangsa yang mayoritas berasal dari pulau ...",
+                opts: ["Sumatra", "Kalimantan", "Jawa", "Sulawesi"],
+                ans: 2
+            },
+            {
+                q: "Suku Asmat dan Suku Dani merupakan kelompok suku bangsa yang berasal dari pulau ...",
+                opts: ["Papua", "Bali", "Kalimantan", "Sulawesi"],
+                ans: 0
+            },
+            {
+                q: "Ketika berkenalan dengan teman baru di kelas, sebaiknya kita bersikap ...",
+                opts: ["Sombong", "Malu-malu kucing", "Percaya diri", "Acuh tak acuh"],
+                ans: 2
+            },
+            {
+                q: "Alamat rumah dan tempat tinggal kita merupakan bagian tidak terpisahkan dari wilayah ...",
+                opts: ["Desa tetangga", "Negara Kesatuan Republik Indonesia (NKRI)", "Benua Asia", "Kelurahan saja"],
+                ans: 1
+            },
+            {
+                q: "Penting bagi seorang anak untuk mengetahui alamat rumahnya sendiri. Salah satu tujuannya adalah agar ...",
+                opts: ["Mudah disuruh tetangga", "Tidak mudah tersesat saat pulang ke rumah", "Bisa menyombongkan diri", "Diberi hadiah oleh guru"],
+                ans: 1
+            },
+            {
+                q: "Lingkungan tempat tinggal di sekitar kita sangat beragam. Tempat tinggal yang berada di daerah dataran tinggi biasanya berupa ...",
+                opts: ["Pantai dan laut", "Pegunungan dan perkebunan", "Pelabuhan besar", "Gedung pencakar langit berderet"],
+                ans: 1
+            },
+            {
+                q: "Dalam struktur masyarakat di lingkungan tempat tinggal, beberapa RT (Rukun Tetangga) digabungkan menjadi satu wilayah yang disebut ...",
+                opts: ["RW (Rukun Warga)", "Kecamatan", "Kabupaten", "Provinsi"],
+                ans: 0
+            },
+            {
+                q: "Gotong royong membersihkan lingkungan rumah atau kampung bersama tetangga adalah wujud dari ...",
+                opts: ["Hidup rukun dan bermasyarakat", "Mencari keuntungan pribadi", "Meminta imbalan uang", "Menghindari tugas sekolah"],
+                ans: 0
+            },
+            {
+                q: "Rumah, sekolah, jalan raya, dan taman bermain yang ada di sekitar kita adalah bagian dari lingkungan ...",
+                opts: ["Luar angkasa", "Sekitar tempat tinggal kita", "Negara lain", "Hutan belantara"],
+                ans: 1
+            },
+            {
+                q: "Sikap kita terhadap fasilitas umum yang ada di lingkungan tempat tinggal (seperti taman atau lampu jalan) adalah ...",
+                opts: ["Merusaknya bersama teman", "Menjaga dan merawatnya", "Membiarkannya kotor", "Mencoret-coretnya"],
+                ans: 1
+            },
+            {
+                q: "Walaupun teman sebangkumu memiliki bahasa daerah dan kebiasaan yang berbeda, kamu tetap harus ...",
+                opts: ["Berteman baik tanpa membedakan", "Melarangnya berbicara", "Menjauhinya saat istirahat", "Meminta dia mengubah budayanya"],
+                ans: 0
+            },
+            {
+                q: "Tokoh bangsa Indonesia yang ikut serta memperjuangkan kemerdekaan dan persatuan bangsa adalah ...",
+                opts: ["Sukarno dan Mohammad Hatta", "Pahlawan dari luar negeri", "Raja-raja Inggris", "Penjelajah samudra"],
+                ans: 0
+            },
+            {
+                q: "Dalam sebuah keluarga inti di rumah, anggota keluarga yang bertindak sebagai pemimpin atau kepala rumah tangga biasanya adalah seorang...",
+                opts: ["Kepala Keluarga (Ayah atau Ibu)", "Ketua RT", "Ketua RW", "Kepala Desa"],
+                ans: 0
+            },
+            {
+                q: "Menjaga kebersihan lingkungan rumah dan desa/kelurahan tempat tinggal kita merupakan bentuk cinta terhadap ...",
+                opts: ["Kamar tidur saja", "Tanah air Indonesia", "Barang mewah", "Permainan online"],
+                ans: 1
+            },
+            {
+                q: "Sifat saling menghargai keragaman suku, budaya, dan agama di lingkungan tempat tinggal akan menciptakan kehidupan yang ...",
+                opts: ["Rusak dan kacau", "Rukun, aman, dan damai", "Sombong dan egois", "Penuh perselisihan"],
+                ans: 1
+            }
+        ];
+
+        // --- APP STATE ---
+        let studentName = "";
+        let studentClass = "";
+        let currentIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+
+        // --- DOM REFERENCES ---
+        const screens = document.querySelectorAll('.screen');
+        const inputName = document.getElementById('input-name');
+        const inputClass = document.getElementById('input-class');
+        const errorName = document.getElementById('error-name');
+        const btnStart = document.getElementById('btn-start');
+
+        const qCounter = document.getElementById('q-counter');
+        const studentTag = document.getElementById('student-tag');
+        const liveScore = document.getElementById('live-score');
+        const progressBar = document.getElementById('progress-bar');
+        const questionText = document.getElementById('question-text');
+        const optionsContainer = document.getElementById('options-container');
+
+        // --- NAVIGATION HELPER ---
+        function switchScreen(screenId) {
+            screens.forEach(s => {
+                s.classList.remove('active');
+                s.style.display = 'none';
+            });
+            const target = document.getElementById(screenId);
+            if (target) {
+                target.style.display = 'block';
+                void target.offsetWidth;
+                target.classList.add('active');
+            }
+        }
+
+        function goToHome() {
+            inputName.value = "";
+            switchScreen('screen-login');
+        }
+
+        // --- LOGIN & START QUIZ ---
+        btnStart.addEventListener('click', () => {
+            const nameVal = inputName.value.trim();
+            if (nameVal === "") {
+                errorName.classList.remove('hidden');
+                inputName.classList.add('border-red-400');
+                return;
+            }
+            errorName.classList.add('hidden');
+            inputName.classList.remove('border-red-400');
+
+            studentName = nameVal;
+            studentClass = inputClass.value;
+            studentTag.innerText = `${studentName} (${studentClass})`;
+
+            currentIndex = 0;
+            correctCount = 0;
+            score = 0;
+
+            loadQuestion();
+            switchScreen('screen-quiz');
+        });
+
+        inputName.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') btnStart.click();
+        });
+
+        // --- QUIZ ENGINE ---
+        function loadQuestion() {
+            optionsContainer.classList.remove('disabled-opts');
+            const currentQ = questionsData[currentIndex];
+
+            qCounter.innerText = `Soal ${currentIndex + 1}/${questionsData.length}`;
+            liveScore.innerText = score;
+            const progressPct = ((currentIndex) / questionsData.length) * 100;
+            progressBar.style.width = `${progressPct}%`;
+
+            questionText.innerText = currentQ.q;
+            optionsContainer.innerHTML = '';
+
+            const letters = ['A', 'B', 'C', 'D'];
+            currentQ.opts.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "btn-fun w-full bg-white border-2 border-slate-200 text-left text-base md:text-lg p-4 rounded-2xl flex items-center gap-4 hover:border-emerald-400 font-medium text-slate-700";
+                btn.innerHTML = `
+                    <span class="w-9 h-9 shrink-0 bg-slate-100 text-slate-700 flex items-center justify-center rounded-xl font-bold text-base">${letters[idx]}</span>
+                    <span>${opt}</span>
+                `;
+                btn.onclick = () => selectOption(idx, btn, currentQ.ans);
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function selectOption(selectedIndex, btnElement, correctIndex) {
+            optionsContainer.classList.add('disabled-opts');
+            const allBtns = optionsContainer.querySelectorAll('button');
+            const correctBtn = allBtns[correctIndex];
+
+            if (selectedIndex === correctIndex) {
+                btnElement.classList.add('opt-correct');
+                correctCount++;
+                score += 5; // 20 questions * 5 = 100 points max
+            } else {
+                btnElement.classList.add('opt-wrong');
+                correctBtn.classList.add('opt-correct');
+            }
+
+            liveScore.innerText = score;
+
+            setTimeout(() => {
+                currentIndex++;
+                if (currentIndex < questionsData.length) {
+                    loadQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 1400);
+        }
+
+        function finishQuiz() {
+            progressBar.style.width = '100%';
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('result-detail').innerText = `Benar ${correctCount} dari ${questionsData.length} soal (${score} Poin)`;
+
+            // Save record to LocalStorage
+            saveScoreRecord({
+                name: studentName,
+                classRoom: studentClass,
+                score: score,
+                correct: correctCount,
+                total: questionsData.length,
+                date: new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' })
+            });
+
+            // Customize title based on score
+            const resTitle = document.getElementById('result-title');
+            const resEmoji = document.getElementById('result-emoji');
+            if (score === 100) {
+                resTitle.innerText = "Sempurna! Hebat Sekali!";
+                resEmoji.innerText = "🌟";
+            } else if (score >= 80) {
+                resTitle.innerText = "Kerja Bagus!";
+                resEmoji.innerText = "👍";
+            } else if (score >= 60) {
+                resTitle.innerText = "Cukup Baik!";
+                resEmoji.innerText = "👏";
+            } else {
+                resTitle.innerText = "Tetap Semangat Belajar!";
+                resEmoji.innerText = "💪";
+            }
+
+            switchScreen('screen-result');
+        }
+
+        function restartQuiz() {
+            currentIndex = 0;
+            correctCount = 0;
+            score = 0;
+            loadQuestion();
+            switchScreen('screen-quiz');
+        }
+
+        // --- LOCAL STORAGE REKAP NILAI ---
+        function saveScoreRecord(record) {
+            let records = JSON.parse(localStorage.getItem('ppkn_class3_scores') || '[]');
+            records.unshift(record); // Add to top
+            localStorage.setItem('ppkn_class3_scores', JSON.stringify(records));
+        }
+
+        // --- TEACHER PANEL MODAL & DASHBOARD ---
+        function openTeacherLoginModal() {
+            document.getElementById('teacher-pin-input').value = '';
+            document.getElementById('pin-error').classList.add('hidden');
+            document.getElementById('modal-teacher-pin').classList.remove('hidden');
+        }
+
+        function closeTeacherLoginModal() {
+            document.getElementById('modal-teacher-pin').classList.add('hidden');
+        }
+
+        function verifyTeacherPin() {
+            const pin = document.getElementById('teacher-pin-input').value.trim();
+            if (pin === 'guru123') {
+                closeTeacherLoginModal();
+                loadTeacherDashboard();
+                switchScreen('screen-teacher');
+            } else {
+                document.getElementById('pin-error').classList.remove('hidden');
+            }
+        }
+
+        function loadTeacherDashboard() {
+            const records = JSON.parse(localStorage.getItem('ppkn_class3_scores') || '[]');
+            const tbody = document.getElementById('score-table-body');
+            const noMsg = document.getElementById('no-scores-msg');
+            tbody.innerHTML = '';
+
+            if (records.length === 0) {
+                noMsg.classList.remove('hidden');
+                return;
+            }
+            noMsg.classList.add('hidden');
+
+            records.forEach((rec, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3.5 md:p-4 font-semibold text-slate-500">${idx + 1}</td>
+                    <td class="p-3.5 md:p-4 font-bold text-slate-800">${escapeHtml(rec.name)}</td>
+                    <td class="p-3.5 md:p-4"><span class="bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-lg text-xs font-bold">${escapeHtml(rec.classRoom)}</span></td>
+                    <td class="p-3.5 md:p-4"><span class="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full font-extrabold text-sm">${rec.score}</span></td>
+                    <td class="p-3.5 md:p-4 text-slate-600 font-medium">${rec.correct} / ${rec.total}</td>
+                    <td class="p-3.5 md:p-4 text-slate-400 text-xs">${rec.date}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        function exportScoresCSV() {
+            const records = JSON.parse(localStorage.getItem('ppkn_class3_scores') || '[]');
+            if (records.length === 0) {
+                // Custom modal or inline notification instead of alert()
+                alert('Belum ada data nilai untuk diekspor.');
+                return;
+            }
+
+            let csvContent = "No,Nama Siswa,Kelas,Nilai Akhir,Benar/Total,Waktu Pengerjaan\n";
+            records.forEach((r, i) => {
+                csvContent += `${i+1},"${r.name}","${r.classRoom}",${r.score},"${r.correct}/${r.total}","${r.date}"\n`;
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.setAttribute('href', url);
+            a.setAttribute('download', 'Rekap_Nilai_PPKn_Kelas3.csv');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function clearAllScores() {
+            if (confirm('Apakah Anda yakin ingin menghapus seluruh data rekap nilai siswa yang tersimpan?')) {
+                localStorage.removeItem('ppkn_class3_scores');
+                loadTeacherDashboard();
+            }
+        }
+    </script>
+</body>
+</html>
